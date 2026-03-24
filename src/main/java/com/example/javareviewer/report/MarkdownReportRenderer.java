@@ -1,6 +1,7 @@
 package com.example.javareviewer.report;
 
 import com.example.javareviewer.model.ProjectReviewResult;
+import com.example.javareviewer.model.RecommendedAction;
 import com.example.javareviewer.model.ReviewIssue;
 import com.example.javareviewer.model.ReviewResult;
 
@@ -45,8 +46,24 @@ public class MarkdownReportRenderer implements ReportRenderer {
                 .append("- **Total issues:** ").append(result.totalIssues()).append("\n")
                 .append("- **Severity summary:** ");
         ConsoleReportRenderer.appendSeveritySummary(builder, result.severityCounts());
-        builder.append("\n\n## Worst files\n\n");
+        builder.append("\n")
+                .append("- **Spring structure summary:** ");
+        ConsoleReportRenderer.appendStructureSummary(builder, result);
+        builder.append("\n\n## Recommended actions\n\n");
 
+        for (RecommendedAction action : result.recommendedActions(5)) {
+            builder.append("- **[")
+                    .append(action.priority())
+                    .append("] ")
+                    .append(action.title())
+                    .append("** (issues: ")
+                    .append(action.issueCount())
+                    .append(") — ")
+                    .append(action.recommendation())
+                    .append("\n");
+        }
+
+        builder.append("\n## Worst files\n\n");
         for (ReviewResult fileResult : result.worstFiles(5)) {
             builder.append("- `")
                     .append(fileResult.target())

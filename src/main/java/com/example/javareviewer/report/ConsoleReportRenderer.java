@@ -1,6 +1,7 @@
 package com.example.javareviewer.report;
 
 import com.example.javareviewer.model.ProjectReviewResult;
+import com.example.javareviewer.model.RecommendedAction;
 import com.example.javareviewer.model.ReviewIssue;
 import com.example.javareviewer.model.ReviewResult;
 import com.example.javareviewer.model.Severity;
@@ -25,10 +26,22 @@ public class ConsoleReportRenderer implements ReportRenderer {
         builder.append("Severity summary: ");
         appendSeveritySummary(builder, result.severityCounts());
         builder.append(System.lineSeparator());
+        builder.append("Spring structure summary: ");
+        appendStructureSummary(builder, result);
+        builder.append(System.lineSeparator());
         builder.append("Worst files:").append(System.lineSeparator());
         for (ReviewResult fileResult : result.worstFiles(5)) {
             builder.append("- ").append(fileResult.target())
                     .append(" (issues: ").append(fileResult.issues().size()).append(")")
+                    .append(System.lineSeparator());
+        }
+        builder.append(System.lineSeparator());
+        builder.append("Recommended actions:").append(System.lineSeparator());
+        for (RecommendedAction action : result.recommendedActions(5)) {
+            builder.append("- [").append(action.priority()).append("] ")
+                    .append(action.title())
+                    .append(" (issues: ").append(action.issueCount()).append(") — ")
+                    .append(action.recommendation())
                     .append(System.lineSeparator());
         }
         builder.append(System.lineSeparator());
@@ -71,5 +84,15 @@ public class ConsoleReportRenderer implements ReportRenderer {
         builder.append("HIGH=").append(counts.getOrDefault(Severity.HIGH, 0L))
                 .append(", MEDIUM=").append(counts.getOrDefault(Severity.MEDIUM, 0L))
                 .append(", LOW=").append(counts.getOrDefault(Severity.LOW, 0L));
+    }
+
+    static void appendStructureSummary(StringBuilder builder, ProjectReviewResult result) {
+        builder.append("controller=").append(result.structureSummary().count("controller"))
+                .append(", service=").append(result.structureSummary().count("service"))
+                .append(", repository=").append(result.structureSummary().count("repository"))
+                .append(", entity=").append(result.structureSummary().count("entity"))
+                .append(", config=").append(result.structureSummary().count("config"))
+                .append(", util=").append(result.structureSummary().count("util"))
+                .append(", other=").append(result.structureSummary().count("other"));
     }
 }

@@ -3,10 +3,14 @@ package com.example.javareviewer;
 import com.example.javareviewer.rules.BroadCatchExceptionRule;
 import com.example.javareviewer.rules.CatchExceptionSwallowRule;
 import com.example.javareviewer.rules.ConsolePrintRule;
+import com.example.javareviewer.rules.ControllerBusinessLogicRule;
 import com.example.javareviewer.rules.ControllerDirectRepositoryDependencyRule;
 import com.example.javareviewer.rules.ControllerTooManyMethodsRule;
+import com.example.javareviewer.rules.LoggingWithoutExceptionObjectRule;
 import com.example.javareviewer.rules.PrintStackTraceRule;
+import com.example.javareviewer.rules.RepositoryNamingAndResponsibilityRule;
 import com.example.javareviewer.rules.ServiceWebObjectLeakRule;
+import com.example.javareviewer.rules.ServiceWriteMethodWithoutTransactionalRule;
 import com.example.javareviewer.rules.TransactionalRiskRule;
 import com.example.javareviewer.scanner.JavaFileScanner;
 import org.junit.jupiter.api.Test;
@@ -60,10 +64,37 @@ class JavaFileScannerTest {
     }
 
     @Test
+    void shouldRecognizeSpringProjectStructureAndNewRules() throws Exception {
+        JavaFileScanner scanner = new JavaFileScanner(List.of(
+                new ControllerDirectRepositoryDependencyRule(),
+                new ControllerBusinessLogicRule(),
+                new ServiceWriteMethodWithoutTransactionalRule(),
+                new LoggingWithoutExceptionObjectRule(),
+                new RepositoryNamingAndResponsibilityRule()
+        ));
+
+        var result = scanner.scanDirectory(Path.of("src/test/resources/spring-structure-demo"));
+
+        assertEquals(6, result.totalFiles());
+        assertEquals(1, result.structureSummary().count("controller"));
+        assertEquals(1, result.structureSummary().count("service"));
+        assertEquals(1, result.structureSummary().count("repository"));
+        assertEquals(1, result.structureSummary().count("entity"));
+        assertEquals(1, result.structureSummary().count("config"));
+        assertEquals(1, result.structureSummary().count("util"));
+        assertTrue(result.recommendedActions(5).size() >= 3);
+        assertTrue(result.totalIssues() >= 5);
+    }
+
+    @Test
     void shouldScanDirectoryAndAggregateResults() throws Exception {
         JavaFileScanner scanner = new JavaFileScanner(List.of(
                 new ControllerDirectRepositoryDependencyRule(),
+                new ControllerBusinessLogicRule(),
                 new ServiceWebObjectLeakRule(),
+                new ServiceWriteMethodWithoutTransactionalRule(),
+                new RepositoryNamingAndResponsibilityRule(),
+                new LoggingWithoutExceptionObjectRule(),
                 new ConsolePrintRule(),
                 new PrintStackTraceRule(),
                 new TransactionalRiskRule(),

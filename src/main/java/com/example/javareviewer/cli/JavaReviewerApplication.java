@@ -8,11 +8,15 @@ import com.example.javareviewer.report.ReportRenderers;
 import com.example.javareviewer.rules.BroadCatchExceptionRule;
 import com.example.javareviewer.rules.CatchExceptionSwallowRule;
 import com.example.javareviewer.rules.ConsolePrintRule;
+import com.example.javareviewer.rules.ControllerBusinessLogicRule;
 import com.example.javareviewer.rules.ControllerDirectRepositoryDependencyRule;
 import com.example.javareviewer.rules.ControllerTooManyMethodsRule;
+import com.example.javareviewer.rules.LoggingWithoutExceptionObjectRule;
 import com.example.javareviewer.rules.PrintStackTraceRule;
+import com.example.javareviewer.rules.RepositoryNamingAndResponsibilityRule;
 import com.example.javareviewer.rules.ReviewRule;
 import com.example.javareviewer.rules.ServiceWebObjectLeakRule;
+import com.example.javareviewer.rules.ServiceWriteMethodWithoutTransactionalRule;
 import com.example.javareviewer.rules.TransactionalRiskRule;
 import com.example.javareviewer.scanner.JavaFileScanner;
 
@@ -73,7 +77,11 @@ public class JavaReviewerApplication {
     private List<ReviewRule> defaultRules() {
         return List.of(
                 new ControllerDirectRepositoryDependencyRule(),
+                new ControllerBusinessLogicRule(),
                 new ServiceWebObjectLeakRule(),
+                new ServiceWriteMethodWithoutTransactionalRule(),
+                new RepositoryNamingAndResponsibilityRule(),
+                new LoggingWithoutExceptionObjectRule(),
                 new ConsolePrintRule(),
                 new PrintStackTraceRule(),
                 new TransactionalRiskRule(),

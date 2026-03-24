@@ -37,13 +37,14 @@ class JavaReviewerApplicationTest {
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(stdout, true, StandardCharsets.UTF_8));
         try {
-            int exitCode = application.run(new String[]{"src/test/resources/samples", "--format=markdown"});
+            int exitCode = application.run(new String[]{"src/test/resources/spring-structure-demo", "--format=markdown"});
 
             assertEquals(0, exitCode);
             String output = stdout.toString(StandardCharsets.UTF_8);
             assertTrue(output.contains("# Java Reviewer Project Report"));
-            assertTrue(output.contains("## Worst files"));
-            assertTrue(output.contains("### `src/test/resources/samples/SampleController.java`"));
+            assertTrue(output.contains("## Recommended actions"));
+            assertTrue(output.contains("Spring structure summary"));
+            assertTrue(output.contains("controller=1"));
         } finally {
             System.setOut(originalOut);
         }

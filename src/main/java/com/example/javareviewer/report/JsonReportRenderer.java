@@ -1,6 +1,7 @@
 package com.example.javareviewer.report;
 
 import com.example.javareviewer.model.ProjectReviewResult;
+import com.example.javareviewer.model.RecommendedAction;
 import com.example.javareviewer.model.ReviewIssue;
 import com.example.javareviewer.model.ReviewResult;
 import com.example.javareviewer.model.Severity;
@@ -34,6 +35,26 @@ public class JsonReportRenderer implements ReportRenderer {
                 .append("  \"totalFiles\": ").append(result.totalFiles()).append(",\n")
                 .append("  \"totalIssues\": ").append(result.totalIssues()).append(",\n")
                 .append("  \"severitySummary\": ").append(severityJson(result.severityCounts())).append(",\n")
+                .append("  \"springStructureSummary\": ").append(structureJson(result)).append(",\n")
+                .append("  \"recommendedActions\": [");
+
+        for (int index = 0; index < result.recommendedActions(5).size(); index++) {
+            RecommendedAction action = result.recommendedActions(5).get(index);
+            if (index > 0) {
+                builder.append(",");
+            }
+            builder.append("\n    {\"priority\": \"")
+                    .append(action.priority())
+                    .append("\", \"title\": \"")
+                    .append(escape(action.title()))
+                    .append("\", \"issueCount\": ")
+                    .append(action.issueCount())
+                    .append(", \"recommendation\": \"")
+                    .append(escape(action.recommendation()))
+                    .append("\"}");
+        }
+
+        builder.append("\n  ],\n")
                 .append("  \"worstFiles\": [");
 
         for (int index = 0; index < result.worstFiles(5).size(); index++) {
@@ -93,6 +114,18 @@ public class JsonReportRenderer implements ReportRenderer {
                 .add("\"HIGH\": " + counts.getOrDefault(Severity.HIGH, 0L))
                 .add("\"MEDIUM\": " + counts.getOrDefault(Severity.MEDIUM, 0L))
                 .add("\"LOW\": " + counts.getOrDefault(Severity.LOW, 0L))
+                .toString();
+    }
+
+    private String structureJson(ProjectReviewResult result) {
+        return new StringJoiner(", ", "{", "}")
+                .add("\"controller\": " + result.structureSummary().count("controller"))
+                .add("\"service\": " + result.structureSummary().count("service"))
+                .add("\"repository\": " + result.structureSummary().count("repository"))
+                .add("\"entity\": " + result.structureSummary().count("entity"))
+                .add("\"config\": " + result.structureSummary().count("config"))
+                .add("\"util\": " + result.structureSummary().count("util"))
+                .add("\"other\": " + result.structureSummary().count("other"))
                 .toString();
     }
 
