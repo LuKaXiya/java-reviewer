@@ -2,8 +2,12 @@ package com.example.javareviewer.cli;
 
 import com.example.javareviewer.model.ProjectReviewResult;
 import com.example.javareviewer.model.ReviewResult;
-import com.example.javareviewer.report.ConsoleReportRenderer;
+import com.example.javareviewer.report.ReportFormat;
+import com.example.javareviewer.report.ReportRenderer;
+import com.example.javareviewer.report.ReportRenderers;
+import com.example.javareviewer.rules.BroadCatchExceptionRule;
 import com.example.javareviewer.rules.CatchExceptionSwallowRule;
+import com.example.javareviewer.rules.ConsolePrintRule;
 import com.example.javareviewer.rules.ControllerDirectRepositoryDependencyRule;
 import com.example.javareviewer.rules.ControllerTooManyMethodsRule;
 import com.example.javareviewer.rules.PrintStackTraceRule;
@@ -27,19 +31,23 @@ public class JavaReviewerApplication {
     }
 
     int run(String[] args) {
-        if (args.length != 1) {
-            System.err.println("Usage: java-reviewer <path-to-java-file-or-directory>");
+        CliOptions options;
+        try {
+            options = CliOptions.parse(args);
+        } catch (IllegalArgumentException exception) {
+            System.err.println(exception.getMessage());
+            System.err.println(CliOptions.usage());
             return 1;
         }
 
-        Path target = Path.of(args[0]);
+        Path target = options.target();
         if (!Files.exists(target)) {
             System.err.println("Target does not exist: " + target);
             return 1;
         }
 
         JavaFileScanner scanner = new JavaFileScanner(defaultRules());
-        ConsoleReportRenderer renderer = new ConsoleReportRenderer();
+        ReportRenderer renderer = ReportRenderers.forFormat(options.format());
 
         try {
             if (Files.isDirectory(target)) {
@@ -66,10 +74,57 @@ public class JavaReviewerApplication {
         return List.of(
                 new ControllerDirectRepositoryDependencyRule(),
                 new ServiceWebObjectLeakRule(),
+                new ConsolePrintRule(),
                 new PrintStackTraceRule(),
                 new TransactionalRiskRule(),
+                new BroadCatchExceptionRule(),
                 new CatchExceptionSwallowRule(),
                 new ControllerTooManyMethodsRule()
         );
+    }
+
+    record CliOptions(Path target, ReportFormat format) {
+        static CliOptions parse(String[] args) {
+            if (args.length == 0) {
+                throw new IllegalArgumentException("Missing target path.");
+            }
+
+            Path target = null;
+            ReportFormat format = ReportFormat.TEXT;
+
+            for (int index = 0; index < args.length; index++) {
+                String arg = args[index];
+                if ("--format".equals(arg)) {
+                    if (index + 1 >= args.length) {
+                        throw new IllegalArgumentException("Missing value after --format.");
+                    }
+                    format = ReportFormat.fromCliValue(args[++index]);
+                    continue;
+                }
+
+                if (arg.startsWith("--format=")) {
+                    format = ReportFormat.fromCliValue(arg.substring("--format=".length()));
+                    continue;
+                }
+
+                if (arg.startsWith("--")) {
+                    throw new IllegalArgumentException("Unknown option: " + arg);
+                }
+
+                if (target != null) {
+                    throw new IllegalArgumentException("Only one target path is supported.");
+                }
+                target = Path.of(arg);
+            }
+
+            if (target == null) {
+                throw new IllegalArgumentException("Missing target path.");
+            }
+            return new CliOptions(target, format);
+        }
+
+        static String usage() {
+            return "Usage: java-reviewer [--format text|json|markdown] <path-to-java-file-or-directory>";
+        }
     }
 }

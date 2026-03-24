@@ -5,8 +5,9 @@ import com.example.javareviewer.model.ReviewIssue;
 import com.example.javareviewer.model.ReviewResult;
 import com.example.javareviewer.model.Severity;
 
-public class ConsoleReportRenderer {
+public class ConsoleReportRenderer implements ReportRenderer {
 
+    @Override
     public String render(ReviewResult result) {
         StringBuilder builder = new StringBuilder();
         builder.append("Java Reviewer Report").append(System.lineSeparator());
@@ -14,6 +15,7 @@ public class ConsoleReportRenderer {
         return builder.toString();
     }
 
+    @Override
     public String render(ProjectReviewResult result) {
         StringBuilder builder = new StringBuilder();
         builder.append("Java Reviewer Project Report").append(System.lineSeparator());
@@ -65,7 +67,7 @@ public class ConsoleReportRenderer {
         }
     }
 
-    private void appendSeveritySummary(StringBuilder builder, java.util.Map<Severity, Long> counts) {
+    static void appendSeveritySummary(StringBuilder builder, java.util.Map<Severity, Long> counts) {
         builder.append("HIGH=").append(counts.getOrDefault(Severity.HIGH, 0L))
                 .append(", MEDIUM=").append(counts.getOrDefault(Severity.MEDIUM, 0L))
                 .append(", LOW=").append(counts.getOrDefault(Severity.LOW, 0L));
